@@ -1,8 +1,7 @@
 package ru.maritariny;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class Main {
 
@@ -14,25 +13,38 @@ public class Main {
         String s = reader.readLine();
         int n = Integer.parseInt(reader.readLine());
         List<Long> list = RLE(s);
+        Map<Point, Long> map = new HashMap<>(n);
+        List<Point> listPoint = new ArrayList<>(n);
         int length = list.size();
-        //System.out.println(list);
         for (int i = 0; i < n; i++) {
             String[] parts = reader.readLine().split(" ");
             long left = Long.parseLong(parts[0]);
             long right = Long.parseLong(parts[1]);
-            int begin = 0;
-            for (int j = 0; j < length; j++) {
-                if (list.get(j) == left) {
-                    begin = j;
-                    break;
-                }  else if (list.get(j) > left) {
-                    begin = j - 1;
-                    break;
+            listPoint.add(new Point(left, right));
+        }
+        List<Point> sortedList = new ArrayList<>(listPoint);
+        Collections.sort(sortedList);
+        int first = 0;
+        for (Point point : sortedList) {
+            long left = point.getLeft();
+            long right = point.getRight();
+            int begin = first; // номер начала интервала в списке list. Начала интервалов упорядочены
+            long cur = list.get(first);
+            if (cur != left) {
+                for (int i = (first + 1); i < length; i++) {
+                    if (list.get(i) == left) {
+                        begin = i;
+                        first = i;
+                        break;
+                    } else if (list.get(i) > left) {
+                        begin = i - 1;
+                        first = i - 1;
+                        break;
+                    }
                 }
             }
             long result = 0L;
             long next;
-
             boolean end = false;
             while (left <= right && !end) {
                 if ((begin + 1) <= (list.size() - 1)) {
@@ -56,7 +68,12 @@ public class Main {
                 left = next;
                 begin++;
             }
-            System.out.println(result);
+            map.put(point, result);
+            //System.out.println(result);
+        }
+
+        for (Point point : listPoint) {
+            System.out.println(map.get(point));
         }
         reader.close();
     }
@@ -117,4 +134,44 @@ public class Main {
         return list;
     }
 
+}
+class Point implements Comparable<Point>{
+    private long left;
+    private long right;
+
+    public Point(long left, long right) {
+        this.left = left;
+        this.right = right;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Point point = (Point) o;
+        return left == point.left && right == point.right;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(left, right);
+    }
+
+    @Override
+    public int compareTo(Point o) {
+        if (this.left == o.getLeft()) {
+            return Long.compare(this.right, o.getRight());
+            //return o.getLeft() - this.left;
+        }
+        return Long.compare(this.left, o.getLeft());
+        //return o.getW() - this.right;
+    }
+
+    public long getLeft() {
+        return left;
+    }
+
+    public long getRight() {
+        return right;
+    }
 }
